@@ -13,7 +13,7 @@ struct ContentView: View {
     var body: some View {
         Group {
             if manager.user != nil {
-                Text("VistaPrincipal(authManager: manager)")
+                VistaPrincipal(authManager: manager)
             } else {
                 VistaLogin(authManager: manager)
             }

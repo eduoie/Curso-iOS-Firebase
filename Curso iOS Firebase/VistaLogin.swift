@@ -17,7 +17,65 @@ struct VistaLogin: View {
     @State private var mensajeError: String?
     
     var body: some View {
-        
+        VStack(spacing: 20) {
+            Text(seEstaRegistrando ? "Crear cuenta" : "Bienvenido/a")
+                .font(.largeTitle)
+                .bold()
+            
+            TextField("Email", text: $email)
+                .textFieldStyle(.roundedBorder)
+                .textInputAutocapitalization(.never)
+                .keyboardType(.emailAddress)
+            
+            SecureField("Contraseña", text: $password)
+                .textFieldStyle(.roundedBorder)
+            
+            if let mensajeError {
+                Text(mensajeError)
+                    .foregroundStyle(.red)
+                    .font(.caption)
+            }
+            
+            // Botón de inicio de sesión o de registro
+            Button {
+                logeando = true
+                Task {
+                    await autenticar()
+                }
+            } label: {
+                Text(seEstaRegistrando ? "Registrarse" : "Iniciar sesión")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .disabled(email.isEmpty || password.isEmpty || logeando)
+            .opacity(email.isEmpty || password.isEmpty || logeando ? 0.5 : 1.0)
+            
+            Button {
+                seEstaRegistrando.toggle()
+                mensajeError = nil
+            } label: {
+                Text(seEstaRegistrando ? "¿Ya tienes cuenta? ¡Entra!" : "¿No tienes cuenta? ¡Regístrate!")
+                    .foregroundStyle(.blue)
+            }
+        }
+        .padding()
+    }
+    
+    func autenticar() async {
+        do {
+            if seEstaRegistrando {
+                try await authManager.register(email: email, pass: password)
+            } else {
+                try await authManager.login(email: email, pass: password)
+            }
+            logeando = false
+        } catch {
+            mensajeError = error.localizedDescription
+            logeando = false
+        }
     }
 }
 
