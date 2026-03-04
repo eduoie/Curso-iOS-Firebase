@@ -15,13 +15,16 @@ enum ConstantesFirestore {
 // TODO: temporal
 protocol GastosViewModelProtocol: Observable {
     var gastos: [Gasto] { get set }
+    var importeTotal: Double { get set }
     func escucharDatos()
-    func anadirGasto(titulo: String, importe: Double)
+    func anadirGasto(titulo: String, importe: Double, categoria: CategoriaGastos)
+    func borrarGasto(indices: IndexSet)
 }
 
 @Observable
 class GastosViewModel: GastosViewModelProtocol {
     var gastos: [Gasto] = []
+    var importeTotal: Double = 0.0
     
     private var db = Firestore.firestore()
     private var idUsuario: String
@@ -45,18 +48,37 @@ class GastosViewModel: GastosViewModelProtocol {
                 self.gastos = documents.compactMap { doc -> Gasto? in
                     try? doc.data(as: Gasto.self)
                 }
+                
+                // $0 contiene el acumulado hasta el momento, $1.importe el importe de un gasto
+                // reduce(0) indica que empezamos a acumular a partir de 0 (el importe total empieza en 0).
+                self.importeTotal = self.gastos.reduce(0) { $0 + $1.importe }
             }
     }
     
-    func anadirGasto(titulo: String, importe: Double) {
+    func anadirGasto(titulo: String, importe: Double, categoria: CategoriaGastos) {
         let nuevoGasto = Gasto(titulo: titulo,
                                importe: importe,
                                fecha: Date(),
+                               categoria: categoria,
                                idUsuario: idUsuario)
         do {
             try db.collection(ConstantesFirestore.coleccionGastos).addDocument(from: nuevoGasto)
         } catch {
             print("Error guardando: \(error)")
+        }
+    }
+    
+    func borrarGasto(indices: IndexSet) {
+        indices.forEach { indice in
+            let gasto = gastos[indice]
+            
+            guard let idGasto = gasto.id else { return }
+            
+            db.collection(ConstantesFirestore.coleccionGastos).document(idGasto).delete { error in
+                if let error {
+                    print("Error al borrar: \(error.localizedDescription)")
+                }
+            }
         }
     }
     

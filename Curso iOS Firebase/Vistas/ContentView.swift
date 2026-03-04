@@ -13,8 +13,8 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if let user = manager.user {
-                VistaGastos(idUsuario: user.uid)
+            if manager.user != nil {
+                VistaGastos(authManager: manager)
             } else {
                 VistaLogin(authManager: manager)
             }
