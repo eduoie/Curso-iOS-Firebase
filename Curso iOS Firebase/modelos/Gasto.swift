@@ -16,11 +16,10 @@ struct Gasto: Identifiable, Codable {
     var importe: Double
     var fecha: Date
     
-    var categoria: CategoriaGastos = .sinCategoria
-    
-    var idUsuario: String // Necesario para saber de qué usuario es el gasto
+    var idUsuario: String   // Necesario para saber de qué usuario es el gasto
+    var idCategoria: String // Cada gasto se asocia a una categoría de la colección Categorías
     
     enum CodingKeys: String, CodingKey {
-        case id, titulo, importe, fecha, idUsuario, categoria
+        case id, titulo, importe, fecha, idUsuario, idCategoria
     }
 }

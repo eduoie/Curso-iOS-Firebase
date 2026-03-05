@@ -9,11 +9,13 @@ import SwiftUI
 
 struct VistaAnadirGasto: View {
     @Environment(\.dismiss) private var dismiss
-    var viewModel: any GastosViewModelProtocol
+    var viewModel: GastosViewModel
     
     @State private var titulo = ""
     @State private var importe: Double = 0.0
-    @State private var categoria: CategoriaGastos = .sinCategoria
+    @State private var idCategoriaSeleccionada: String = ""
+    
+    @State private var mostrarCategorias = false
     
     var body: some View {
         NavigationStack {
@@ -23,10 +25,23 @@ struct VistaAnadirGasto: View {
                 TextField("Importe", value: $importe, format: .number)
                     .keyboardType(.decimalPad)
                 
-                Picker("Categoría", selection: $categoria) {
-                    ForEach(CategoriaGastos.allCases, id: \.self) { categoria in
-                        Label(categoria.rawValue, systemImage: categoria.nombreIcono)
-                            .tag(categoria)
+                Picker("Categoría", selection: $idCategoriaSeleccionada) {
+                    if viewModel.categorias.isEmpty {
+                        Text("No hay categorías")
+                            .tag("")
+                    }
+                    ForEach(viewModel.categorias) { categoria in
+                        HStack {
+                            Image(systemName: categoria.icono)
+                            Text(categoria.nombre)
+                        }
+                        .tag(categoria.id ?? "")
+                    }
+                }
+                .onAppear {
+                    // Preseleccionar la primera categoría que haya, si existe
+                    if let primera = viewModel.categorias.first, idCategoriaSeleccionada.isEmpty {
+                        idCategoriaSeleccionada = primera.id ?? ""
                     }
                 }
             }
@@ -37,16 +52,22 @@ struct VistaAnadirGasto: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar") {
-                        viewModel.anadirGasto(titulo: titulo, importe: importe, categoria: categoria)
+                        viewModel.anadirGasto(titulo: titulo, importe: importe, idCategoria: idCategoriaSeleccionada)
                         dismiss()
                     }
                     .disabled(titulo.isEmpty || importe == 0)
                 }
+                ToolbarItem(placement: .bottomBar) {
+                    Button("Categorías") {
+                        mostrarCategorias = true
+                    }
+                    .buttonStyle(.borderless)
+                    .tint(.orange)
+                }
+            }
+            .sheet(isPresented: $mostrarCategorias) {
+                VistaNuevaCategoria(viewModel: viewModel)
             }
         }
     }
-}
-
-#Preview {
-    VistaAnadirGasto(viewModel: GastosViewModelMock(idUsuario: "apsdfi"))
 }
