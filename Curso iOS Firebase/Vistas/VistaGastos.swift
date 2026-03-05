@@ -14,6 +14,8 @@ struct VistaGastos: View {
     @State private var viewModel: GastosViewModel
     @State private var mostrarAnadir = false
     
+    @State private var gastoEditable: Gasto?
+    
     init(authManager: AuthManager) {
         self.authManager = authManager
         let idUsuario = authManager.user?.uid ?? ""
@@ -72,6 +74,10 @@ struct VistaGastos: View {
                                 .bold()
                                 .foregroundStyle((gasto.importe >= 0) ? Color.red : Color.green)
                         }
+                        .contentShape(Rectangle()) // Para que toda la fila sea tocable
+                        .onTapGesture {
+                            gastoEditable = gasto
+                        }
                     }
                     .onDelete(perform: viewModel.borrarGasto)
                 }
@@ -98,6 +104,9 @@ struct VistaGastos: View {
             }
             .sheet(isPresented: $mostrarAnadir) {
                 VistaAnadirGasto(viewModel: viewModel)
+            }
+            .sheet(item: $gastoEditable) { gasto in
+                VistaAnadirGasto(viewModel: viewModel, gastoEditable: gasto)
             }
         }
     }

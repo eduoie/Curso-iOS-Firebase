@@ -11,6 +11,8 @@ struct VistaAnadirGasto: View {
     @Environment(\.dismiss) private var dismiss
     var viewModel: GastosViewModel
     
+    var gastoEditable: Gasto?
+    
     @State private var titulo = ""
     @State private var importe: Double = 0.0
     @State private var idCategoriaSeleccionada: String = ""
@@ -39,20 +41,26 @@ struct VistaAnadirGasto: View {
                     }
                 }
                 .onAppear {
-                    // Preseleccionar la primera categoría que haya, si existe
-                    if let primera = viewModel.categorias.first, idCategoriaSeleccionada.isEmpty {
-                        idCategoriaSeleccionada = primera.id ?? ""
+                    if let gasto = gastoEditable {
+                        titulo = gasto.titulo
+                        importe = gasto.importe
+                        idCategoriaSeleccionada = gasto.idCategoria
+                    } else {
+                        // Preseleccionar la primera categoría que haya, si existe
+                        if let primera = viewModel.categorias.first, idCategoriaSeleccionada.isEmpty {
+                            idCategoriaSeleccionada = primera.id ?? ""
+                        }
                     }
                 }
             }
-            .navigationTitle("Nuevo gasto")
+            .navigationTitle(gastoEditable == nil ? "Nuevo gasto" : "Editar gasto")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar") {
-                        viewModel.anadirGasto(titulo: titulo, importe: importe, idCategoria: idCategoriaSeleccionada)
+                        guardar()
                         dismiss()
                     }
                     .disabled(titulo.isEmpty || importe == 0)
@@ -61,13 +69,25 @@ struct VistaAnadirGasto: View {
                     Button("Categorías") {
                         mostrarCategorias = true
                     }
-                    .buttonStyle(.borderless)
                     .tint(.orange)
                 }
             }
             .sheet(isPresented: $mostrarCategorias) {
+                mostrarCategorias = false
+            } content: {
                 VistaNuevaCategoria(viewModel: viewModel)
             }
+        }
+    }
+    
+    func guardar() {
+        if var gasto = gastoEditable {
+            gasto.titulo = titulo
+            gasto.importe = importe
+            gasto.idCategoria = idCategoriaSeleccionada
+            viewModel.actualizarGasto(gasto)
+        } else {
+            viewModel.anadirGasto(titulo: titulo, importe: importe, idCategoria: idCategoriaSeleccionada)
         }
     }
 }

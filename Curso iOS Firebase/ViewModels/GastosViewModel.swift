@@ -90,6 +90,18 @@ class GastosViewModel {
         }
     }
     
+    func actualizarGasto(_ gasto: Gasto) {
+        guard let idGasto = gasto.id else { return }
+        
+        do {
+            try db.collection(ConstantesFirestore.coleccionGastos)
+                .document(idGasto)
+                .setData(from: gasto, merge: true)
+        } catch {
+            print("Error al actualizar: \(error.localizedDescription)")
+        }
+    }
+    
     func anadirCategoria(nombre: String, icono: String, color: String) {
         let categoria = Categoria(nombre: nombre, icono: icono, nombreColor: color, idUsuario: idUsuario)
         do {
